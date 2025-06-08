@@ -10,36 +10,37 @@ const errorMiddleware = require('./midddlewares/error');
 const authRoutes = require('./routes/auth');
 const constitutionRoutes = require('./routes/constitution');
 
-
 const app = express();
 connectDB();
 
 // Middleware
+// It's good practice to have a flexible CORS policy.
+// The wildcard "*" is okay for development, but for production, you might want to restrict it.
+// Example: app.use(cors({ origin: 'https://your-frontend-domain.com' }));
+app.use(cors()); 
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors()); 
-
-
-app.use(cors({
-  origin: "*",
-}));
-
-
 
 app.get("/", (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
   res.send("welcome to ushauriAI!");
 });
 
-// Routes
+// API Routes
 app.use('/api', authRoutes);
 app.use('/api', constitutionRoutes);
 
-// Error handling middleware
+// Error handling middleware should be last
 app.use(errorMiddleware);
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000; // Use a default port for local development
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running for local development on port ${PORT}`);
 });
+
+// **IMPORTANT:** Export the app for Vercel to use
+module.exports = app;
