@@ -82,7 +82,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedTopic, onTopicPro
 
   const callBackendAPI = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch('http://localhost:8000/api/chat', {
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

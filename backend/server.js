@@ -13,10 +13,6 @@ const constitutionRoutes = require('./routes/constitution');
 const app = express();
 connectDB();
 
-// Middleware
-// It's good practice to have a flexible CORS policy.
-// The wildcard "*" is okay for development, but for production, you might want to restrict it.
-// Example: app.use(cors({ origin: 'https://your-frontend-domain.com' }));
 app.use(cors()); 
 
 app.use(express.json());
@@ -36,11 +32,11 @@ app.use('/api', constitutionRoutes);
 // Error handling middleware should be last
 app.use(errorMiddleware);
 
-const PORT = process.env.PORT || 5000; // Use a default port for local development
+const PORT = process.env.PORT || 5000; 
 
 app.listen(PORT, () => {
   console.log(`Server is running for local development on port ${PORT}`);
 });
 
-// **IMPORTANT:** Export the app for Vercel to use
+
 module.exports = app;
