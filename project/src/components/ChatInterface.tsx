@@ -7,7 +7,7 @@ interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
-  timestamp: Date;
+  timestamp: Date; // Store as string if using JSON.stringify for cleaner parsing later
 }
 
 interface ChatInterfaceProps {
@@ -16,14 +16,36 @@ interface ChatInterfaceProps {
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedTopic, onTopicProcessed }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Hello! I\'m your AI assistant for Kenya\'s Constitution. What would you like to know?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
+  // Define a key for local storage
+  const LOCAL_STORAGE_KEY = 'kenyaConstitutionChatHistory';
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // 1. Initialize messages from localStorage when the component mounts
+    try {
+      const storedMessages = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedMessages) {
+        // Parse stored JSON, and ensure timestamps are Date objects again
+        const parsedMessages: Message[] = JSON.parse(storedMessages);
+        return parsedMessages.map(msg => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp), // Convert timestamp string back to Date object
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to load chat history from local storage:", error);
+      // Fallback to initial message if loading fails
+    }
+    // Default initial message if no history found or error occurred
+    return [
+      {
+        id: '1',
+        text: 'Hello! I\'m your AI assistant for Kenya\'s Constitution. I can help you understand constitutional rights, government structure, legal procedures, and more. What would you like to know?',
+        sender: 'bot',
+        timestamp: new Date(),
+      },
+    ];
+  });
+
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,10 +65,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedTopic, onTopicPro
     }
   }, [selectedTopic]);
 
-  // UPDATED: Replace this with your actual backend API call
+  // 2. Save messages to localStorage whenever the messages state changes
+  useEffect(() => {
+    try {
+      // Convert Date objects to ISO strings before stringifying to JSON
+      const serializableMessages = messages.map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp.toISOString(),
+      }));
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(serializableMessages));
+    } catch (error) {
+      console.error("Failed to save chat history to local storage:", error);
+    }
+  }, [messages]);
+
+
   const callBackendAPI = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch('https://ushauri-ai.vercel.app/api/chat', { // <-- YOUR BACKEND ENDPOINT
+      const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,16 +91,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedTopic, onTopicPro
       });
 
       if (!response.ok) {
-        // Handle HTTP errors
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to fetch AI response');
       }
 
       const data = await response.json();
-      return data.response; // Assuming your backend sends { response: "AI's generated text" }
+      return data.response;
     } catch (error) {
       console.error('Error calling backend API:', error);
-      throw error; // Re-throw to be caught by handleSendMessage
+      throw error;
     }
   };
 
