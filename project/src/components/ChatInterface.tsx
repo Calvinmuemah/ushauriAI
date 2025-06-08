@@ -46,7 +46,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ selectedTopic, onTopicPro
   // UPDATED: Replace this with your actual backend API call
   const callBackendAPI = async (userMessage: string): Promise<string> => {
     try {
-      const response = await fetch('http://localhost:8000/api/chat', { // <-- YOUR BACKEND ENDPOINT
+      const response = await fetch('https://ushauri-ai.vercel.app/api/chat', { // <-- YOUR BACKEND ENDPOINT
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
